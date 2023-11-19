@@ -4,7 +4,7 @@
  * [  ['A', 'B'],
  *    ['!A', '!B']  ]
  *  Where ! in front of a clause means not.
- *  Returns a dictionary of valutions for variables that stisfy every clause in the formula
+ *  Returns a dictionary of valutions for variables that satisfy every clause in the formula
  * 
  *  Pure literal elimination needs to be added to make this fast as fuck
  */
@@ -14,7 +14,7 @@ export type Literal = string;
 export type Clause = Literal[];
 export type Formula = Clause[];
 
-interface Assignment {
+export interface Assignment {
   [key: string]: boolean;
 }
 
@@ -54,15 +54,13 @@ export default function dpll(formula: Formula, assignment: Assignment = {}): Ass
   if (variable !== '') {
     const literals: Literal[] = [variable, `!${variable}`];
     for (const literal of literals) {
-      const value = literal[0] !== '!';
+      const value = getLiteralValue(literal)
       const newAssignment = { ...assignment, [variable]: value };
   
       // Recursively apply DPLL to the simplified formula
       const result = dpll(simplifyFormula(formula, variable, value), newAssignment);
       if (result) {
         return result;
-      } else {
-        console.log('null counter')
       }
     }
   }
