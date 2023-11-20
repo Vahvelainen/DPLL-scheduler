@@ -53,7 +53,18 @@ export function NOT(formula: Formula): Formula {
 }
 
 export function XOR( formulas: Formula[] ): Formula {
-  return AND([ OR(formulas), NOT( AND(formulas) ) ])
+  // create pairs of formulas
+  let pairs: Formula[][] = [];
+  for (let i = 0; i < formulas.length; i++) {
+      for (let j = i + 1; j < formulas.length; j++) {
+          pairs.push([formulas[i], formulas[j]]);
+      }
+  }
+  // at most one
+  const at_most_one = AND( pairs.map( pair => NOT( AND(pair) ) ) )
+  // at least one
+  const at_least_one = OR( formulas )
+  return AND([ at_most_one, at_least_one])
 }
 
 export function IMPL( condition: Formula, implication: Formula ): Formula {
