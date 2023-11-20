@@ -7,12 +7,14 @@ import type {Project, Step} from './types'
 
 export default function solveSchedule(projects: Project[], resources: string[], timeSteps: number = 0): Literal[] {
 
-  if (timeSteps > 10000) {
+  if (timeSteps > 10) {
     throw new Error('Required timestep limit exceeded, check for impossible conditions')
   }
 
   if (!timeSteps) {
+    //Ran the first time
     timeSteps = findMinTime(projects)
+    projects = multiplySteps(projects)
   }
 
   // Parse clauses based on the rules
@@ -20,10 +22,10 @@ export default function solveSchedule(projects: Project[], resources: string[], 
   // Maybe come up with better separator than underscore in the future
 
   const formula = AND([
-    everyStepHappens(projects, resources, timeSteps),
+    everyStepHappens(projects, resources, timeSteps), //Removing this make it way slower
     noResourceOverlap(projects, resources, timeSteps),
     followProjectOrder(projects, resources, timeSteps),
-    stepsLegthsMatch(projects, resources, timeSteps),
+    stepsHappenOnlyOnce(projects, resources, timeSteps),
   ])
 
   //In the end in the results, only clauses stated to be true ought to be displayd and analysed
@@ -115,7 +117,7 @@ function followProjectOrder(projects: Project[], resources: string[], timeSteps:
   return formula
 }
 
-function stepsLegthsMatch(projects: Project[], resources: string[], timeSteps: number): Formula {
+function stepsHappenOnlyOnce(projects: Project[], resources: string[], timeSteps: number): Formula {
   // Long steps need to have the subsequent times for resources
   // If step is happening in t2 it needs to happen in t1 or t2 (and all the combinastions for longer ones)
   // * If step.length == 2 && timeSteps == 4 :
@@ -130,22 +132,35 @@ function stepsLegthsMatch(projects: Project[], resources: string[], timeSteps: n
       for (let time = 0; time < timeSteps; time++) {
         stepTimeAtoms.push( ATOM(`Resource${step.resource}_Time${time}_Project${project.name}_Step${step.name}`) )
       }
-      //2. create intervals of right length from atoms
-      let intervalFormulas: Formula[] = []
-      const duration = step.duration
-      for ( let i = 0; i < timeSteps-duration; i++) {
-        const intervalFormula = AND(stepTimeAtoms.slice(i, i + duration))
-        intervalFormulas.push( intervalFormula )
-      }
-      //3. throw the interwals to XOR and append to stepFormulas
-      stepFormulas.push( XOR(intervalFormulas) )
+      //2. throw the atoms to XOR and append to stepFormulas
+      stepFormulas.push( XOR(stepTimeAtoms) )
     }
   }
 
   return AND(stepFormulas)
 }
 
-function findMinTime(projects: Project[]) {
+function multiplySteps(projects: Project[]): Project[] {
+  let new_projects: Project[] = []
+  for (const project of projects) {
+    let multiplied_steps: Step[] = []
+    for(const step of project.steps) {
+      for(let i = 0; i < step.duration; i++) {
+        multiplied_steps.push({
+          name: step.name + '_' + (i+1), //Underscore in the end will be dropped in parsing
+          resource: step.resource,
+          duration: step.duration, //Not sure if this has use or should be 1
+        })
+      }
+    }
+    let new_project: Project = { ...project }
+    new_project.steps = multiplied_steps
+    new_projects.push(new_project)
+  }
+  return new_projects
+}
+
+function findMinTime(projects: Project[]): number {
   let minTime = 0
   for (const project of projects) {
     let projectTime: number = 0
