@@ -35,11 +35,7 @@
 
     function schedule() {
       const responseSchedule = solveSchedule([projectA, projectB], resources)
-      if (!responseSchedule) {
-        console.log(`No satisfying assignment exists.`);
-        return
-      }
-      console.log(`Satisfying assignment found: `, responseSchedule );
+      if (!responseSchedule) { return }
       timings = []
       for( const timingStr of responseSchedule) {
         const timingArr = timingStr.split('_')
@@ -52,7 +48,7 @@
       }
     }
 
-    onMount(schedule)
+    //onMount(schedule)
 
 </script>
 

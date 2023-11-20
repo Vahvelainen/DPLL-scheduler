@@ -31,9 +31,12 @@ export default function solveSchedule(projects: Project[], resources: string[], 
   //In the end in the results, only clauses stated to be true ought to be displayd and analysed
   let satisfiableFromula = dpll(formula)
   if ( satisfiableFromula ) {
-    return filterResults(satisfiableFromula)
+    const result = filterResults(satisfiableFromula)
+    console.log(`Scheduling succesfull with ${timeSteps} steps: `, result );
+    return result
   } else {
     // Iteratively add timesteps to the process
+    console.log(`Scheduling not possible with ${timeSteps} steps, trying with ${timeSteps + 1}`)
     return solveSchedule(projects, resources, timeSteps + 1  )
   }
 }
