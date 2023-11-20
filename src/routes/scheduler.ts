@@ -5,7 +5,15 @@ import {ATOM, AND, OR, NOT, XOR, IMPL, EQVI} from './logic'
 
 import type {Project, Step} from './types'
 
-export default function solveSchedule(projects: Project[], resources: string[], timeSteps: number = 1): Literal[] {
+export default function solveSchedule(projects: Project[], resources: string[], timeSteps: number = 0): Literal[] {
+
+  if (timeSteps > 10000) {
+    throw new Error('Required timestep limit exceeded, check for impossible conditions')
+  }
+
+  if (!timeSteps) {
+    timeSteps = findMinTime(projects)
+  }
 
   // Parse clauses based on the rules
   // Variables follow structure of `Resource${resource}_Time${time}_Project${project.name}_Step${step.name}`
@@ -15,7 +23,7 @@ export default function solveSchedule(projects: Project[], resources: string[], 
     everyStepHappens(projects, resources, timeSteps),
     noResourceOverlap(projects, resources, timeSteps),
     followProjectOrder(projects, resources, timeSteps),
-    // stepsLegthsMatch(projects, resources, timeSteps),
+    stepsLegthsMatch(projects, resources, timeSteps),
   ])
 
   //In the end in the results, only clauses stated to be true ought to be displayd and analysed
@@ -110,9 +118,43 @@ function followProjectOrder(projects: Project[], resources: string[], timeSteps:
 function stepsLegthsMatch(projects: Project[], resources: string[], timeSteps: number): Formula {
   // Long steps need to have the subsequent times for resources
   // If step is happening in t2 it needs to happen in t1 or t2 (and all the combinastions for longer ones)
-  // q => ( y /\ z )
-  // This is hard man, it gets added last
-  return []
+  // * If step.length == 2 && timeSteps == 4 :
+  // *   formula = XOR([ times0to1, times1to2, times2to3 ])
+
+  let stepFormulas: Formula[] = []
+  //Loop trough steps
+  for ( const project of projects) {
+    for( const step of project.steps ) {
+      //1. Create atoms for every timeslot into array
+      let stepTimeAtoms: Formula[] = []
+      for (let time = 0; time < timeSteps; time++) {
+        stepTimeAtoms.push( ATOM(`Resource${step.resource}_Time${time}_Project${project.name}_Step${step.name}`) )
+      }
+      //2. create intervals of right length from atoms
+      let intervalFormulas: Formula[] = []
+      const duration = step.duration
+      for ( let i = 0; i < timeSteps-duration; i++) {
+        const intervalFormula = AND(stepTimeAtoms.slice(i, i + duration))
+        intervalFormulas.push( intervalFormula )
+      }
+      //3. throw the interwals to XOR and append to stepFormulas
+      stepFormulas.push( XOR(intervalFormulas) )
+    }
+  }
+
+  return AND(stepFormulas)
+}
+
+function findMinTime(projects: Project[]) {
+  let minTime = 0
+  for (const project of projects) {
+    let projectTime: number = 0
+    for (const step of project.steps) {
+      projectTime += step.duration
+    }
+    minTime = projectTime > minTime ? projectTime : minTime
+  }
+  return minTime
 }
 
 function filterResults(formula: Assignment): Literal[] {
