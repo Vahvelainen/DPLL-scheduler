@@ -1,19 +1,11 @@
 <script lang="ts">
-
+  import TextMutable from './TextMutable.svelte';
+  import ChoiceMutable from './ChoiceMutable.svelte';
+  import NumberMutable from './NumberMutable.svelte';
   import type {Project, Step} from './types'
-
-  export let project :Project = {
-    name: 'Project A',
-    steps: [
-      { name: 'Step 1', resource: 'A', duration: 1 },
-      { name: 'Step 2', resource: 'C', duration: 2 },
-      { name: 'Step 3', resource: 'B', duration: 2 },
-      { name: 'Step 4', resource: 'D', duration: 1 },
-    ]
-  }
-
+  export let project: Project
+  export let resources: string[]
 </script>
-
 
 <table>
   <tr>
@@ -23,9 +15,9 @@
   </tr>
   {#each project.steps as step, i }
     <tr>
-      <td>{step.name}</td>
-      <td>{step.resource}</td>
-      <td>{step.duration}</td>
+      <td><TextMutable bind:value={step.name}/></td>
+      <td><ChoiceMutable bind:value={step.resource} choises={resources}/></td>
+      <td><NumberMutable bind:value={step.duration}/></td>
     </tr>
   {/each}
 </table>

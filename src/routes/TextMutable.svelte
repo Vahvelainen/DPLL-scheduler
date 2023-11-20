@@ -1,0 +1,27 @@
+<script lang="ts">
+  export let value: string
+  let editing: boolean = false
+  let input: HTMLInputElement
+
+  function startEdit() {
+    setTimeout( () =>  window.addEventListener('click', stopEdit) )
+    editing = true
+  }
+
+  function stopEdit(event: Event) {
+    if (event.target === input) {
+      return
+    }
+    window.removeEventListener('click', stopEdit)
+    editing = false
+  }
+
+
+</script>
+
+{#if editing} 
+  <input type="text" bind:value bind:this={input}>
+{:else}
+  <span on:click={startEdit}>{value}</span>
+{/if}
+
