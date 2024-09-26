@@ -19,8 +19,14 @@ export interface Assignment {
 }
 
 export default function dpll(formula: Formula, assignment: Assignment = {}): Assignment | null {
+  //console.log( 'Clauses: ', formula.length )
+  
   //Work on a copy instead of original
   assignment = { ...assignment }
+
+  // Pure literal elimination (makes it super slow for some reason, commented out)
+  // assignment = pureLiteralElimination(formula, assignment)
+
   
   // Unit propagation
   for (const clause of formula) {
@@ -45,9 +51,6 @@ export default function dpll(formula: Formula, assignment: Assignment = {}): Ass
   if (formula.some(clause => clause.length === 0)) {
     return null;
   }
-  
-  // Pure literal elimination
-  // ...
 
   // Choose a variable to split on that's not yet assigned
   const variable = chooseVariable(formula, assignment);
@@ -89,6 +92,30 @@ function simplifyFormula(formula: Formula, variable: string, value: boolean): Fo
     }
   }
   return new_formula
+}
+
+function pureLiteralElimination(formula: Formula, assignment: Assignment): Assignment {
+  // 1. List all literals in formula
+  let literals: Literal[] = []
+  for (const clause of formula) {
+    for (const literal of clause) {
+      literals.push(literal)
+    }
+  }
+
+  // 2. Loop trough literals and find counterpart, remove both from array if found
+  while (literals.length) {
+    const literal = literals[0]
+    // If not found, add pure literal to assigment
+    const counterpart = literal.startsWith('!') ? literal.slice(1) : '!' + literal
+    if ( !literals.includes(counterpart) ) {
+      assignment[getLiteralVariable(literal)] = getLiteralValue(literal)
+    }
+    //filter array
+    literals = literals.filter( lit => lit !== literal && lit !== counterpart )
+  }
+  
+  return assignment;
 }
 
 function chooseVariable(formula: Formula, assignment: Assignment): string {
