@@ -2,15 +2,15 @@
 
 Experimental project to find out if clientside javascript is fast enough to run scheduling program based on a logic solver.
 
-The scheduling problem is repserented as "projects" that have steps that need specific resources and take certain time.
+The scheduling problem is represented as "projects" that have steps that need specific resources and take certain time.
 Comparable uses cases are many, this program was written with fleet management in mind.
 
-The scheduling is represented as binary logic formula and Davis-Putnam-Logemann-Loveland (DPLL) is used to find a solution with minimun amount of time slots used. The scheduling is converted into collection of clauses representing conditions such as "step1 must happen before step2". The algorithm is
+The scheduling is represented as binary logic formula and Davis-Putnam-Logemann-Loveland (DPLL) algorithm is used to find a solution with minimun amount of time slots used. The scheduling is converted into collection of clauses representing conditions such as "step1 must happen before step2". The algorithm is
 finding a combination of timings to fill each logical condition in least amount of timeslots used. This approach is know as SAT solving.
 
-The binary logic ans DPLL algorithm are written in typescript to see if performance of modern browsers is suitable to preform this calculation fast enough for convienient use. The computer I used was an M1 mac with google chrome.
+The binary logic and DPLL algorithm are written in typescript to see if performance of modern browsers is suitable to preform this calculation fast enough for convienient use. The computer I used was an M1 mac with google chrome.
 I found out that even with minimal complexity of two projects, each containing four steps, some combinations would cause calculation time of several seconds.
-Real use cases with complextities possibly two orders of manitude higher would likely not be viable. 
+Real use cases with complexities possibly two orders of manitude higher would likely not be viable. 
 
 Possible future aproach might be use of webassembly or serverside calculations.
 
